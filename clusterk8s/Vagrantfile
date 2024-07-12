@@ -1,6 +1,38 @@
 # Variables
-# Set the etchosts variable
 etcHosts = ""
+ingressNginx = ""
+wordpress = ""
+wordpressUrl = ""
+# Get the user input for the installation
+case ARVG[0]
+when "provision", "up"
+print "Do you want to install Ingress Nginx? (y/n): "
+ingressNginx = STDIN.gets.chomp
+print "\n"
+    if ingressNginx == "y"
+        print "Doyou want a wordpress in your kubernetes cluster? (y/n): "
+        wordpress = STDIN.gets.chomp
+        print "\n"
+        if wordpress == "y"
+            print "Enter the URL of the wordpress (default=wordpress.kub): "
+            wordpressUrl = STDIN.gets.chomp
+            unless wordpressUrl.empty? then wordpressUrl else "wordpress.kub" end
+        end
+    end
+else
+end
+# set common shell script
+common = <<-SHELL
+    sudo apt update -qq 2>&1 > /dev/null
+    sudo apt install -y -qq git vim curl tree net-tools telnet python3-pip sshpass nfs-common 2>&1 > /dev/null
+    curl -fsSL https://get.docker.com -o get-docker.sh 2>&1
+    sudo sh get-docker.sh 2>&1 > /dev/null
+    sudo usermod -aG docker vagrant
+    sudo service docker start
+    sudo echo "autocmd FileType yaml setlocal ai ts=2 sw=2 et" > /home/vagrant/.vimrc
+    sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config
+    sudo systemctl restart sshd
+SHELL
 # set server list and parameters
 NODES = [
     { :hostname => "srv-haproxy", :ip => "192.168.12.10", :ram => 512, :cpu => 1, :type => "haproxy" },
