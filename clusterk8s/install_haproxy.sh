@@ -57,9 +57,9 @@ set_haproxy(){
     listen kubernetes-ingress
         bind *:80
         mode tcp
-        option log-health-checks"> /etc/haproxy/haproxy.cfg
+        option log-health-checks" > /etc/haproxy/haproxy.cfg
 
-    for srv in $(cat /etc/hosts | grep '-node' | awk '{print $2}');do echo "    server "$srv" "$srv":80 check">>/etc/haproxy/haproxy.cfg
+    for srv in $(cat /etc/hosts | grep node | awk '{print $2}');do echo "    server "$srv" "$srv":80 check">>/etc/haproxy/haproxy.cfg
     done
 }
 
