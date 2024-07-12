@@ -1,0 +1,36 @@
+vagrant.configure("2") do |config|
+    # Variables
+    # Set the etchosts variable
+    etcHosts = ""
+    # set server list and parameters
+    NODES = [
+        { :hostname => "srv-haproxy", :ip => "192.168.12.10", :ram => 512, :cpu => 1, :type => "haproxy" },
+        { :hostname => "srv-master", :ip => "192.168.12.11", :ram => 2048, :cpu => 2, :type => "kub" },
+        { :hostname => "srv-node1", :ip => "192.168.12.12", :ram => 1024, :cpu => 1, :type => "kub" },
+        { :hostname => "srv-node2", :ip => "192.168.12.13", :ram => 1024, :cpu => 1, :type => "kub" },
+        { :hostname => "srv-deploy", :ip => "192.168.12.20", :ram => 512, :cpu => 1, :type => "deploy" }
+    ]
+    # Loop through the nodes and add machine to the etcHosts variable
+    NODES.each do |node|
+        if node[:type] != "haproxy"
+            etcHosts += "echo '#{node[:ip]} #{node[:hostname]}' >> /etc/hosts\n"
+        else
+            etcHosts += "echo '#{node[:ip]} #{node[:hostname]}' srv-elb.kub >> /etc/hosts\n"
+        end
+    # base box
+    config.vm.box = "ubuntu/trusty64"
+    # Loop through the nodes and create the VMs
+    NODES.each do |node|
+        config.vm.define node[:hostname] do |cfg|
+            cfg.vm.hosname = node[:hostname]
+            cfg.vm.network "private_network", ip: node[:ip]
+            cfg.vm.provider "virtualbox" do |vb|
+                vb.memory = node[:ram]
+                vb.cpus = node[:cpu]
+                vb.name = node[:hostname]
+            end
+            cfg.vm.provision :shell, inline => etcHosts
+            
+        end
+    end
+end
