@@ -7,8 +7,10 @@
 install_haproxy(){
     echo
     echo "HAPROXY - install"
-    sudo apt install -y -qq haproxy 2>&1 >/dev/null
+    sudo apt-get update -qq 2>&1 >/dev/null
+    sudo apt-get install -y -qq haproxy 2>&1 >/dev/null
 }
+
 set_haproxy(){
     echo
     echo "HAPROXY - configuration"
@@ -51,20 +53,20 @@ set_haproxy(){
         option log-health-checks
         timeout client 3h
         timeout server 3h
-        server autokmaster autokmaster:6443 check check-ssl verify none inter 10000
+        server srv-master srv-master:6443 check check-ssl verify none inter 10000
     listen kubernetes-ingress
         bind *:80
         mode tcp
         option log-health-checks"> /etc/haproxy/haproxy.cfg
 
-    for srv in $(cat /etc/hosts | grep knode | awk '{print $2}');do echo "    server "$srv" "$srv":80 check">>/etc/haproxy/haproxy.cfg
+    for srv in $(cat /etc/hosts | grep '-node' | awk '{print $2}');do echo "    server "$srv" "$srv":80 check">>/etc/haproxy/haproxy.cfg
     done
 }
+
 reload_haproxy(){
     echo
     echo "HAPROXY - reload"
-    systemctl reload haproxy
-
+    sudo systemctl reload haproxy
 }
 
 # Script

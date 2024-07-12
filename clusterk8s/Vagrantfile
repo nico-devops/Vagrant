@@ -25,7 +25,7 @@ Vagrant.configure("2") do |config|
     # set common shell script
     common = <<-SHELL
         sudo apt update -qq 2>&1 > /dev/null
-        sudo apt install -y -qq git vim curl tree net-tools telnet python3-pip sshpass nfs-common 2>&1 > /dev/null
+        sudo apt install -y -qq git vim curl tree systemd net-tools telnet python3-pip sshpass nfs-common 2>&1 > /dev/null
         curl -fsSL https://get.docker.com -o get-docker.sh 2>&1
         sudo sh get-docker.sh 2>&1 > /dev/null
         sudo usermod -aG docker vagrant
@@ -51,7 +51,7 @@ Vagrant.configure("2") do |config|
         end
     end
     # base box
-    config.vm.box = "ubuntu/trusty64"
+    config.vm.box = "ubuntu/focal64"
     # Loop through the nodes and create the VMs
     NODES.each do |node|
         config.vm.define node[:hostname] do |cfg|
