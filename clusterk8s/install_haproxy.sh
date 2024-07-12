@@ -53,7 +53,7 @@ set_haproxy(){
         option log-health-checks
         timeout client 3h
         timeout server 3h
-        server srv-master srv-master:6443 check check-ssl verify none inter 10000
+        server srvkmaster srvkmaster:6443 check check-ssl verify none inter 10000
     listen kubernetes-ingress
         bind *:80
         mode tcp
