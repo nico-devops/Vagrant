@@ -1,48 +1,47 @@
-# Variables
-etcHosts = ""
-ingressNginx = ""
-wordpress = ""
-wordpressUrl = ""
-# Get the user input for the installation
-case ARVG[0]
-when "provision", "up"
-print "Do you want to install Ingress Nginx? (y/n): "
-ingressNginx = STDIN.gets.chomp
-print "\n"
-    if ingressNginx == "y"
-        print "Doyou want a wordpress in your kubernetes cluster? (y/n): "
-        wordpress = STDIN.gets.chomp
-        print "\n"
-        if wordpress == "y"
-            print "Enter the URL of the wordpress (default=wordpress.kub): "
-            wordpressUrl = STDIN.gets.chomp
-            unless wordpressUrl.empty? then wordpressUrl else "wordpress.kub" end
-        end
-    end
-else
-end
-# set common shell script
-common = <<-SHELL
-    sudo apt update -qq 2>&1 > /dev/null
-    sudo apt install -y -qq git vim curl tree net-tools telnet python3-pip sshpass nfs-common 2>&1 > /dev/null
-    curl -fsSL https://get.docker.com -o get-docker.sh 2>&1
-    sudo sh get-docker.sh 2>&1 > /dev/null
-    sudo usermod -aG docker vagrant
-    sudo service docker start
-    sudo echo "autocmd FileType yaml setlocal ai ts=2 sw=2 et" > /home/vagrant/.vimrc
-    sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config
-    sudo systemctl restart sshd
-SHELL
-# set server list and parameters
-NODES = [
-    { :hostname => "srv-haproxy", :ip => "192.168.12.10", :ram => 512, :cpu => 1, :type => "haproxy" },
-    { :hostname => "srv-master", :ip => "192.168.12.11", :ram => 2048, :cpu => 2, :type => "kub" },
-    { :hostname => "srv-node1", :ip => "192.168.12.12", :ram => 1024, :cpu => 1, :type => "kub" },
-    { :hostname => "srv-node2", :ip => "192.168.12.13", :ram => 1024, :cpu => 1, :type => "kub" },
-    { :hostname => "srv-deploy", :ip => "192.168.12.20", :ram => 512, :cpu => 1, :type => "deploy" }
-]
-
 Vagrant.configure("2") do |config|
+    # Variables
+    etcHosts = ""
+    ingressNginx = ""
+    wordpress = ""
+    wordpressUrl = ""
+    # Get the user input for the installation
+    case ARGV[0]
+    when "provision", "up"
+    print "Do you want to install Ingress Nginx? (y/n): "
+    ingressNginx = STDIN.gets.chomp
+    print "\n"
+        if ingressNginx == "y"
+            print "Doyou want a wordpress in your kubernetes cluster? (y/n): "
+            wordpress = STDIN.gets.chomp
+            print "\n"
+            if wordpress == "y"
+                print "Enter the URL of the wordpress (default=wordpress.kub): "
+                wordpressUrl = STDIN.gets.chomp
+                unless wordpressUrl.empty? then wordpressUrl else "wordpress.kub" end
+            end
+        end
+    else
+    end
+    # set common shell script
+    common = <<-SHELL
+        sudo apt update -qq 2>&1 > /dev/null
+        sudo apt install -y -qq git vim curl tree net-tools telnet python3-pip sshpass nfs-common 2>&1 > /dev/null
+        curl -fsSL https://get.docker.com -o get-docker.sh 2>&1
+        sudo sh get-docker.sh 2>&1 > /dev/null
+        sudo usermod -aG docker vagrant
+        sudo service docker start
+        sudo echo "autocmd FileType yaml setlocal ai ts=2 sw=2 et" > /home/vagrant/.vimrc
+        sed -i 's/ChallengeResponseAuthentication no/ChallengeResponseAuthentication yes/g' /etc/ssh/sshd_config
+        sudo systemctl restart sshd
+    SHELL
+    # set server list and parameters
+    NODES = [
+        { :hostname => "srv-haproxy", :ip => "192.168.12.10", :ram => 512, :cpu => 1, :type => "haproxy" },
+        { :hostname => "srv-master", :ip => "192.168.12.11", :ram => 2048, :cpu => 2, :type => "kub" },
+        { :hostname => "srv-node1", :ip => "192.168.12.12", :ram => 1024, :cpu => 1, :type => "kub" },
+        { :hostname => "srv-node2", :ip => "192.168.12.13", :ram => 1024, :cpu => 1, :type => "kub" },
+        { :hostname => "srv-deploy", :ip => "192.168.12.20", :ram => 512, :cpu => 1, :type => "deploy" }
+    ]
     # Loop through the nodes and add machine to the etcHosts variable
     NODES.each do |node|
         if node[:type] != "haproxy"
@@ -63,7 +62,25 @@ Vagrant.configure("2") do |config|
                 vb.cpus = node[:cpu]
                 vb.name = node[:hostname]
             end
+            # for all nodes
             cfg.vm.provision "shell", inline: etcHosts
+            # for haproxy
+            if node[:type] == "haproxy"
+                cfg.vm.provision "shell", path: "install_haproxy.sh"
+            end
+            # for all kub nodes
+            if node[:type] == "kub"
+                cfg.vm.provision "shell", inline: common
+            end
+            # for deploy server
+            if node[:type] == "deploy"
+                cfg.vm.provision "shell", inline: common
+                cfg.vm.provision "shell", path: "install_kubspray.sh", args: ingressNginx
+                if wordpress == "y"
+                    cfg.vm.provision "shell", path: "install_nfs.sh"
+                    cfg.vm.provision "shell", path: "install_wordpress.sh", args: wordpressUrl
+                end
+            end
         end
     end
 end
