@@ -1,0 +1,8 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# create a second Vagrantfile
+Vagrant.configure("2") do |config|
+  # use the ubuntu/trusty64 box with a specific version
+  config.vm.box = "ubuntu/trusty64"
+  config.vm.box_version = "20191107.0.0"
+end

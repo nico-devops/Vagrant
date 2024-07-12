@@ -1,0 +1,28 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# VARIABLES
+CPU = 2
+RAM = 2048
+# create a Vagrantfile
+Vagrant.configure("2") do |config|
+  # use the centos/7 box with a specific version
+  config.vm.box = "centos/7"
+  config.vm.box_version = "2004.01"
+  # customize the VirtualBox VM
+  config.vm.provider "virtualbox" do |vb|
+    # Display the VirtualBox GUI when booting the machine (default is false)
+    vb.gui = true
+    # Name the VirtualBox VM
+    vb.name = "test"
+    # Customize the amount of memory and cpus on the VM with variables
+    vb.cpus = CPU
+    vb.memory = RAM
+  end
+  # provision the VM with a shell script
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo yum -y install epel-release
+    sudo yum update
+    sudo yum -y install nginx
+    sudo systemctl start nginx
+  SHELL
+end

@@ -1,0 +1,49 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# VARIABLES 
+CPU = 1
+RAM = 1024
+OS = "ubuntu/xenial64"
+# create a Vagrantfile multi-machine environment
+Vagrant.configure("2") do |config|
+  # create a multi-machine environment with vm.define
+  config.vm.define "lb" do |lb|
+    # use the ubuntu/xenial64 box
+    lb.vm.box = OS
+    # Create a private network, using a specific IP
+    lb.vm.network "private_network", ip: "10.0.0.10"
+    # customize the VirtualBox VM
+    lb.vm.provider "virtualbox" do |vb|
+      vb.memory = RAM
+      vb.cpus = CPU
+      vb.name = "lb"
+    end
+  end
+  # create a multi-machine environment with vm.define
+  config.vm.define "web1" do |web1|
+    # use the ubuntu/xenial64 box
+    web1.vm.box = OS
+    # Create a private network, using a specific IP
+    web1.vm.network "private_network", ip: "10.0.0.11"
+    # customize the VirtualBox VM
+    web1.vm.provider "virtualbox" do |vb|
+      vb.memory = RAM
+      vb.cpus = CPU
+      vb.name = "web1"
+    end
+  end
+  # create a multi-machine environment with vm.define
+  config.vm.define "web2" do |web2|
+    # use the ubuntu/xenial64 box
+    web2.vm.box = OS
+    # Create a private network, using a specific IP
+    web2.vm.network "private_network", ip: "10.0.0.12"
+    # customize the VirtualBox VM
+    web2.vm.provider "virtualbox" do |vb|
+      vb.memory = RAM
+      vb.cpus = CPU
+      vb.name = "web2"
+    end
+  end
+end

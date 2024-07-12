@@ -1,0 +1,73 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# VARIABLES 
+CPU = 1
+RAM = 1024
+OS = "ubuntu/xenial64"
+# create a Vagrantfile multi-machine environment and use plugins
+Vagrant.configure("2") do |config|
+  # create a multi-machine environment with vm.define
+  config.vm.define "lb" do |lb|
+    # define vm parameters
+    lb.vm.box = OS
+    lb.vm.network "private_network", ip: "10.0.0.10"
+    # define hostname
+    lb.vm.hostname = "lb"
+    # use plugins to manage host entries
+    lb.hostsupdater.aliases = {
+      '10.0.0.10' => ['lb'],
+      '10.0.0.11' => ['web1'],
+      '10.0.0.12' => ['web2']
+    }
+    lb.hostsupdater.remove_on_suspend = false
+    # customize the VirtualBox VM
+    lb.vm.provider "virtualbox" do |vb|
+      vb.memory = RAM
+      vb.cpus = CPU
+      vb.name = "lb"
+    end
+  end
+  # create a multi-machine environment with vm.define
+  config.vm.define "web1" do |web1|
+    # define vm parameters
+    web1.vm.box = OS
+    web1.vm.network "private_network", ip: "10.0.0.11"
+    # define hostname
+    web1.vm.hostname = "web1"
+    # use plugins to manage host entries
+    web1.hostsupdater.aliases = {
+      '10.0.0.10' => ['lb'],
+      '10.0.0.11' => ['web1'],
+      '10.0.0.12' => ['web2']
+    }
+    web1.hostsupdater.remove_on_suspend = false
+    # customize the VirtualBox VM
+    web1.vm.provider "virtualbox" do |vb|
+      vb.memory = RAM
+      vb.cpus = CPU
+      vb.name = "web1"
+    end
+  end
+  # create a multi-machine environment with vm.define
+  config.vm.define "web2" do |web2|
+    # define vm parameters
+    web2.vm.box = OS
+    web2.vm.network "private_network", ip: "10.0.0.12"
+    # define hostname
+    web2.vm.hostname = "web2"
+    # use plugins to manage host entries
+    web2.hostsupdater.aliases = {
+      '10.0.0.10' => ['lb'],
+      '10.0.0.11' => ['web1'],
+      '10.0.0.12' => ['web2']
+    }
+    web2.hostsupdater.remove_on_suspend = false
+    # customize the VirtualBox VM
+    web2.vm.provider "virtualbox" do |vb|
+      vb.memory = RAM
+      vb.cpus = CPU
+      vb.name = "web2"
+    end
+  end
+end

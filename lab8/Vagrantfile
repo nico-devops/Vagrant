@@ -1,0 +1,55 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# VARIABLES 
+CPU = 1
+RAM = 1024
+OS = "ubuntu/xenial64"
+# create a Vagrantfile multi-machine environment, provision with local shell scripts
+Vagrant.configure("2") do |config|
+  # create a multi-machine environment with vm.define
+  config.vm.define "lb" do |lb|
+    # define vm parameters
+    lb.vm.box = OS
+    lb.vm.network "private_network", ip: "10.0.0.10"
+    lb.vm.provider "virtualbox" do |vb|
+      vb.memory = RAM
+      vb.cpus = CPU
+      vb.name = "lb"
+    end
+    # provision the VM with a shell script
+    lb.vm.provision "shell", path: "lb.sh"
+  end
+  # create a multi-machine environment with vm.define
+  config.vm.define "web1" do |web1|
+    # define vm parameters
+    web1.vm.box = OS
+    web1.vm.network "private_network", ip: "10.0.0.11"
+    web1.vm.provider "virtualbox" do |vb|
+      vb.memory = RAM
+      vb.cpus = CPU
+      vb.name = "web1"
+    end
+    # provision the VM with a shell script and arguments
+    web1.vm.provision "shell" do |shell|
+      shell.path = "web.sh"
+      shell.args = "1"
+    end 
+  end
+  # create a multi-machine environment with vm.define
+  config.vm.define "web2" do |web2|
+    # define vm parameters
+    web2.vm.box = OS
+    web2.vm.network "private_network", ip: "10.0.0.12"
+    web2.vm.provider "virtualbox" do |vb|
+      vb.memory = RAM
+      vb.cpus = CPU
+      vb.name = "web2"
+    end
+    # provision the VM with a shell script and arguments
+    web2.vm.provision "shell" do |shell|
+      shell.path = "web.sh"
+      shell.args = "2"
+    end 
+  end
+end
