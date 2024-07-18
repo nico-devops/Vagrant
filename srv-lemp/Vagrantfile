@@ -1,0 +1,28 @@
+# VARIABLES 
+CPU = 2
+RAM = 2048
+HOSTNAME = "srv-lemp"
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/focal64"
+  config.vm.hostname = HOSTNAME
+  config.vm.network "private_network", ip: "10.0.0.10"
+  # create a synced local folder
+  config.vm.synced_folder "./wp", "/var/www/your_domain"
+  config.vm.synced_folder "./config_files", "/home/vagrant/config_files"
+  # customize the VirtualBox VM
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = RAM
+    vb.cpus = CPU
+    vb.name = HOSTNAME
+  end
+  # provision the VM with Ansible
+  config.vm.provision "ansible_local" do |ansible|
+    # define the playbook
+    ansible.playbook = "install_lemp.yaml"
+    # install Ansible locally
+    ansible.install = true
+    ansible.install_mode = "pip"
+    ansible.pip_install_cmd = "curl https://bootstrap.pypa.io/pip/3.5/get-pip.py | sudo python"
+  end
+end

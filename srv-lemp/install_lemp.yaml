@@ -1,0 +1,67 @@
+---
+- name: Installation server lemp for wordpress
+  hosts: all
+  become: yes
+  tasks:
+  - name: Install nginx
+    ansible.builtin.apt:
+      name: nginx
+      state: latest
+      update_cache: yes
+  - name: Start and enabled nginx setvice
+    ansible.builtin.service:
+      name: nginx
+      state: started
+      enabled: yes
+  - name: Install mysql-server
+    ansible.builtin.apt:
+      name: mysql-server
+      state: latest
+      update_cache: yes
+  - name: Install PyMySQL
+    ansible.builtin.apt:
+      name: python3-pymysql
+      state: latest
+      update_cache: yes
+  - name: Install php fpm
+    ansible.builtin.apt:
+      name: php-fpm
+      state: latest
+      update_cache: yes
+  - name: Install php mysql
+    ansible.builtin.apt:
+      name: php-mysql
+      state: latest
+      update_cache: yes
+- name: Configuration server lemp for wordpress
+  hosts: all
+  become: yes
+  tasks:
+  - name: Create user and password with all database privileges
+    community.mysql.mysql_user:
+      name: admin_db
+      password: mypass12345
+      priv: '*.*:ALL'
+      state: present
+      login_unix_socket: /run/mysqld/mysqld.sock
+  - name: Try to create database as root/nopassword first. If not allowed, pass the credentials
+    community.mysql.mysql_db:
+      check_implicit_admin: true
+      login_user: admin_db
+      login_password: mypass12345
+      name: db_your_domain
+      state: present
+      login_unix_socket: /run/mysqld/mysqld.sock
+  - name: Copy nginx config file
+    ansible.builtin.copy:
+      src: /home/vagrant/config_files/your_domain
+      dest: /etc/nginx/sites-available/your_domain
+      owner: vagrant
+      group: vagrant
+  - name: site nginx enabled
+    ansible.builtin.shell:
+      cmd: sudo ln -s /etc/nginx/sites-available/your_domain /etc/nginx/sites-enabled/
+  - name: reload nginx setvice
+    ansible.builtin.service:
+      name: nginx
+      state: reloaded
